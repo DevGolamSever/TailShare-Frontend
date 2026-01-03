@@ -1,7 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { User, MediaItem } from '../types';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import type { User, MediaItem } from "../types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api-service-fqgyfbech8f3dbea.uksouth-01.azurewebsites.net/api";
 
 // Base query with auth token
 const baseQuery = fetchBaseQuery({
@@ -9,33 +11,42 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as any).auth?.token;
     if (token) {
-      headers.set('authorization', `Bearer ${token}`);
+      headers.set("authorization", `Bearer ${token}`);
     }
     return headers;
   },
 });
 
 export const apiSlice = createApi({
-  reducerPath: 'api',
+  reducerPath: "api",
   baseQuery,
-  tagTypes: ['User', 'Media', 'Portfolio'],
+  tagTypes: ["User", "Media", "Portfolio"],
   endpoints: (builder) => ({
     // Auth endpoints
     register: builder.mutation<
       { token: string; user: User },
-      { name: string; handle: string; email: string; password: string; artistType?: string }
+      {
+        name: string;
+        handle: string;
+        email: string;
+        password: string;
+        artistType?: string;
+      }
     >({
       query: (credentials) => ({
-        url: '/auth/register',
-        method: 'POST',
+        url: "/auth/register",
+        method: "POST",
         body: credentials,
       }),
     }),
 
-    login: builder.mutation<{ token: string; user: User }, { email: string; password: string }>({
+    login: builder.mutation<
+      { token: string; user: User },
+      { email: string; password: string }
+    >({
       query: (credentials) => ({
-        url: '/auth/login',
-        method: 'POST',
+        url: "/auth/login",
+        method: "POST",
         body: credentials,
       }),
     }),
@@ -47,76 +58,91 @@ export const apiSlice = createApi({
     >({
       query: ({ file, title, description, tags }) => {
         const formData = new FormData();
-        formData.append('file', file);
-        if (title) formData.append('title', title);
-        if (description) formData.append('description', description);
-        if (tags) formData.append('tags', Array.isArray(tags) ? tags.join(',') : tags);
+        formData.append("file", file);
+        if (title) formData.append("title", title);
+        if (description) formData.append("description", description);
+        if (tags)
+          formData.append("tags", Array.isArray(tags) ? tags.join(",") : tags);
 
         return {
-          url: '/media/upload',
-          method: 'POST',
+          url: "/media/upload",
+          method: "POST",
           body: formData,
         };
       },
-      invalidatesTags: ['Media'],
+      invalidatesTags: ["Media"],
     }),
 
     requestUpload: builder.mutation<
       { sasUrl: string; mediaId: string; blobName: string; blobUrl: string },
-      { title?: string; description?: string; tags?: string[]; type: 'image' | 'video' }
+      {
+        title?: string;
+        description?: string;
+        tags?: string[];
+        type: "image" | "video";
+      }
     >({
       query: (data) => ({
-        url: '/media/request-upload',
-        method: 'POST',
+        url: "/media/request-upload",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Media'],
+      invalidatesTags: ["Media"],
     }),
 
     createMedia: builder.mutation<MediaItem, Partial<MediaItem>>({
       query: (data) => ({
-        url: '/media',
-        method: 'POST',
+        url: "/media",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Media'],
+      invalidatesTags: ["Media"],
     }),
 
-    getMedia: builder.query<MediaItem[], { artistId?: string; limit?: number; offset?: number }>({
+    getMedia: builder.query<
+      MediaItem[],
+      { artistId?: string; limit?: number; offset?: number }
+    >({
       query: (params = {}) => {
         const queryParams = new URLSearchParams();
-        if (params.artistId) queryParams.append('artistId', params.artistId);
-        if (params.limit) queryParams.append('limit', params.limit.toString());
-        if (params.offset) queryParams.append('offset', params.offset.toString());
+        if (params.artistId) queryParams.append("artistId", params.artistId);
+        if (params.limit) queryParams.append("limit", params.limit.toString());
+        if (params.offset)
+          queryParams.append("offset", params.offset.toString());
         return {
-          url: `/media${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
+          url: `/media${
+            queryParams.toString() ? `?${queryParams.toString()}` : ""
+          }`,
         };
       },
-      providesTags: ['Media'],
+      providesTags: ["Media"],
     }),
 
     getMediaById: builder.query<MediaItem, { id: string; artistId: string }>({
       query: ({ id, artistId }) => ({
         url: `/media/${id}?artistId=${artistId}`,
       }),
-      providesTags: (_result, _error, { id }) => [{ type: 'Media', id }],
+      providesTags: (_result, _error, { id }) => [{ type: "Media", id }],
     }),
 
-    updateMedia: builder.mutation<MediaItem, { id: string; updates: Partial<MediaItem> }>({
+    updateMedia: builder.mutation<
+      MediaItem,
+      { id: string; updates: Partial<MediaItem> }
+    >({
       query: ({ id, updates }) => ({
         url: `/media/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: updates,
       }),
-      invalidatesTags: ['Media'],
+      invalidatesTags: ["Media"],
     }),
 
     deleteMedia: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/media/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Media'],
+      invalidatesTags: ["Media"],
     }),
 
     // User endpoints
@@ -124,7 +150,7 @@ export const apiSlice = createApi({
       query: (id) => ({
         url: `/users/${id}`,
       }),
-      providesTags: (_result, _error, id) => [{ type: 'User', id }],
+      providesTags: (_result, _error, id) => [{ type: "User", id }],
     }),
 
     // Discovery endpoints
@@ -136,18 +162,24 @@ export const apiSlice = createApi({
 
     getTrending: builder.query<{ tags: string[]; media: MediaItem[] }, void>({
       query: () => ({
-        url: '/discovery/trending',
+        url: "/discovery/trending",
       }),
     }),
 
     // Moderation endpoints
     flagContent: builder.mutation<
-      { id: string; mediaId: string; reporterId: string; reason: string; status: string },
+      {
+        id: string;
+        mediaId: string;
+        reporterId: string;
+        reason: string;
+        status: string;
+      },
       { mediaId: string; reason: string }
     >({
       query: (data) => ({
-        url: '/moderation/flag',
-        method: 'POST',
+        url: "/moderation/flag",
+        method: "POST",
         body: data,
       }),
     }),
@@ -157,42 +189,49 @@ export const apiSlice = createApi({
       query: (artistId) => ({
         url: `/portfolios/${artistId}`,
       }),
-      providesTags: (_result, _error, artistId) => [{ type: 'Portfolio', id: artistId }],
+      providesTags: (_result, _error, artistId) => [
+        { type: "Portfolio", id: artistId },
+      ],
     }),
 
     updatePortfolio: builder.mutation<any, { artistId: string; updates: any }>({
       query: ({ artistId, updates }) => ({
         url: `/portfolios/${artistId}`,
-        method: 'PUT',
+        method: "PUT",
         body: updates,
       }),
-      invalidatesTags: (_result, _error, { artistId }) => [{ type: 'Portfolio', id: artistId }],
+      invalidatesTags: (_result, _error, { artistId }) => [
+        { type: "Portfolio", id: artistId },
+      ],
     }),
 
     // Application Insights status endpoint
-    getInsightsStatus: builder.query<{
-      status: string;
-      applicationInsights: {
-        configured: boolean;
-        initialized: boolean;
-        connectionString: string | null;
-        enabledFeatures: {
-          autoDependencyCorrelation: boolean;
-          autoCollectRequests: boolean;
-          autoCollectPerformance: boolean;
-          autoCollectExceptions: boolean;
-          autoCollectDependencies: boolean;
-          autoCollectConsole: boolean;
-          useDiskRetryCaching: boolean;
-          sendLiveMetrics: boolean;
+    getInsightsStatus: builder.query<
+      {
+        status: string;
+        applicationInsights: {
+          configured: boolean;
+          initialized: boolean;
+          connectionString: string | null;
+          enabledFeatures: {
+            autoDependencyCorrelation: boolean;
+            autoCollectRequests: boolean;
+            autoCollectPerformance: boolean;
+            autoCollectExceptions: boolean;
+            autoCollectDependencies: boolean;
+            autoCollectConsole: boolean;
+            useDiskRetryCaching: boolean;
+            sendLiveMetrics: boolean;
+          };
+          cloudRole: string | null;
+          cloudRoleInstance: string | null;
         };
-        cloudRole: string | null;
-        cloudRoleInstance: string | null;
-      };
-      timestamp: string;
-    }, void>({
+        timestamp: string;
+      },
+      void
+    >({
       query: () => ({
-        url: '/insights/status',
+        url: "/insights/status",
       }),
     }),
   }),
@@ -216,4 +255,3 @@ export const {
   useUpdatePortfolioMutation,
   useGetInsightsStatusQuery,
 } = apiSlice;
-
