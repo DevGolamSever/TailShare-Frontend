@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { User, MediaItem } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-service-fqgyfbech8f3dbea.uksouth-01.azurewebsites.net/api/health';
 
 // Base query with auth token
 const baseQuery = fetchBaseQuery({
